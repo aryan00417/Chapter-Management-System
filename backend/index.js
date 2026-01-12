@@ -1,49 +1,54 @@
-import express from "express"
-import cors from "cors"
-import dotenv from "dotenv"
-import mongoose from "mongoose"
-import cookieParser from "cookie-parser"
-import path from "path"
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 
-import authRoutes from "./routes/auth.route.js"
-import userRoutes from "./routes/user.route.js"
-import taskRoutes from "./routes/task.route.js"
-import reportRoutes from "./routes/report.route.js"
-import { fileURLToPath } from "url"
+// Routes
+import authRoutes from "./routes/auth.route.js";
+import userRoutes from "./routes/user.route.js";
+import taskRoutes from "./routes/task.route.js";
+import reportRoutes from "./routes/report.route.js";
 
-dotenv.config()
+// Load env variables
+dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+// Fix __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Initialize app
+const app = express();
+
+// -------------------- DATABASE --------------------
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("Database is connected")
+    console.log("✅ Database connected");
   })
   .catch((err) => {
-    console.log(err)
-  })
+    console.error("❌ MongoDB connection error:", err);
+  });
 
-const app = express()
-
-// Middleware to handle cors
+// -------------------- CORS CONFIG --------------------
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  process.env.FRONT_END_URL,
+  process.env.FRONT_END_URL, // Vercel URL
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (Postman, mobile apps)
+      // Allow requests with no origin (Postman, server-to-server)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
-        return callback(new Error("Not allowed by CORS"));
+        return callback(null, false); // ❗ Do NOT throw error
       }
     },
     credentials: true,
@@ -52,35 +57,37 @@ app.use(
   })
 );
 
-// 👇 VERY IMPORTANT (preflight support)
+// Handle preflight requests
 app.options("*", cors());
 
-// Middleware to handle JSON object in req body
-app.use(express.json())
+// -------------------- MIDDLEWARE --------------------
+app.use(express.json());
+app.use(cookieParser());
 
-app.use(cookieParser())
-const PORT = process.env.PORT || 3000;
+// -------------------- ROUTES --------------------
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/reports", reportRoutes);
 
-app.listen(PORT, () => {
-  console.log("Server is running on port 3000!")
-})
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use("/api/auth", authRoutes)
-app.use("/api/users", userRoutes)
-app.use("/api/tasks", taskRoutes)
-app.use("/api/reports", reportRoutes)
-
-// serve static files from "uploads" folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")))
-
+// -------------------- ERROR HANDLER --------------------
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500
-
-  const message = err.message || "Internal Server Error"
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
 
   res.status(statusCode).json({
     success: false,
     statusCode,
     message,
-  })
-})
+  });
+});
+
+// -------------------- SERVER --------------------
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
