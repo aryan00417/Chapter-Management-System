@@ -28,20 +28,32 @@ mongoose
 const app = express()
 
 // Middleware to handle cors
+const allowedOrigins = [
+  "http://localhost:5174",
+  process.env.FRONT_END_URL,
+];
+
 app.use(
   cors({
-    origin: process.env.FRONT_END_URL || "http://localhost:5174",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
   })
-)
+);
 
 // Middleware to handle JSON object in req body
 app.use(express.json())
 
 app.use(cookieParser())
+const PORT = process.env.PORT || 3000;
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
   console.log("Server is running on port 3000!")
 })
 

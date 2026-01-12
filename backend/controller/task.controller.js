@@ -161,6 +161,20 @@ export const updateTask = async (req, res, next) => {
   }
 }
 
+export const uploadAttachment = (req, res, next) => {
+  try {
+    if (!req.file) {
+      return next(errorHandler(400, "No file uploaded"))
+    }
+
+    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+
+    res.status(200).json({ fileUrl })
+  } catch (error) {
+    next(error)
+  }
+}
+
 export const deleteTask = async (req, res, next) => {
   try {
     const task = await Task.findById(req.params.id)

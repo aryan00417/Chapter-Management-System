@@ -11,9 +11,9 @@ const AuthLayout = ({ children }) => {
         </div>
       </div>
 
-      <div className="hidden md:block w-1/2">
+      <div className="hidden md:block w-1.7/2">
         <img
-          src="https://images.pexels.com/photos/3183153/pexels-photo-3183153.jpeg"
+          src="/ssitPic.JPG"
           alt="Login background"
           className="h-full w-full object-cover"
         />

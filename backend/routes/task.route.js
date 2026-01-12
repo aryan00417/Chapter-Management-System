@@ -1,5 +1,6 @@
 import express from "express"
 import { adminOnly, verifyToken } from "../utils/verifyUser.js"
+import upload from "../utils/multer.js"
 import {
   createTask,
   deleteTask,
@@ -9,12 +10,21 @@ import {
   updateTask,
   updateTaskChecklist,
   updateTaskStatus,
+  uploadAttachment,
   userDashboardData,
 } from "../controller/task.controller.js"
 
 const router = express.Router()
 
 router.post("/create", verifyToken, adminOnly, createTask)
+
+router.post(
+  "/upload-attachment",
+  verifyToken,
+  adminOnly,
+  upload.single("file"),
+  uploadAttachment
+)
 
 router.get("/", verifyToken, getTasks)
 

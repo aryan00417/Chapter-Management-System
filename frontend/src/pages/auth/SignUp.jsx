@@ -87,11 +87,11 @@ const SignUp = () => {
               </div>
 
               <h1 className="text-2xl font-bold text-gray-800 mt-4 uppercase">
-                Join Project Flow
+                Join SSIT
               </h1>
 
               <p className="text-gray-600 mt-1">
-                Start managing your projects efficiently
+                Start managing your work
               </p>
             </div>
 
