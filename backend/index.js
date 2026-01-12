@@ -29,6 +29,7 @@ const app = express()
 
 // Middleware to handle cors
 const allowedOrigins = [
+  "http://localhost:5173",
   "http://localhost:5174",
   process.env.FRONT_END_URL,
 ];
@@ -36,16 +37,23 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
+      // allow requests with no origin (Postman, mobile apps)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        return callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// 👇 VERY IMPORTANT (preflight support)
+app.options("*", cors());
 
 // Middleware to handle JSON object in req body
 app.use(express.json())
