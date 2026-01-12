@@ -58,17 +58,35 @@ app.use(
 );
 
 // Handle preflight requests
-app.options("*", cors());
+
 
 // -------------------- MIDDLEWARE --------------------
 app.use(express.json());
 app.use(cookieParser());
 
+console.log("ENV CHECK:", {
+  MONGO_URI: process.env.MONGO_URI,
+  FRONT_END_URL: process.env.FRONT_END_URL,
+  NODE_ENV: process.env.NODE_ENV,
+});
+
 // -------------------- ROUTES --------------------
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/tasks", taskRoutes);
-app.use("/api/reports", reportRoutes);
+// Mount routers with guarded logging to pinpoint mount-time errors
+const mountRouter = (base, router, name) => {
+  try {
+    console.log(`Mounting ${name} at ${base} — type: ${typeof router}`);
+    app.use(base, router);
+  } catch (err) {
+    console.error(`Failed to mount ${name} at ${base}:`, err);
+    // Exit so nodemon will show the error and we can fix the offending router
+    process.exit(1);
+  }
+};
+
+mountRouter("/api/auth", authRoutes, "authRoutes");
+mountRouter("/api/users", userRoutes, "userRoutes");
+mountRouter("/api/tasks", taskRoutes, "taskRoutes");
+mountRouter("/api/reports", reportRoutes, "reportRoutes");
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
